@@ -1,0 +1,18 @@
+header = """
+/*
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */"""
+
+tab_width = 4
+language = "C"
+cpp_compat = true
+
+include_guard = "NSM_LIB_H"
+
+[parse]
+parse_deps = true
+include = ["nsm-io"]
+
+[enum]
+rename_variants = "QualifiedScreamingSnakeCase"

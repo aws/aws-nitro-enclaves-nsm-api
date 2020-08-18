@@ -1,15 +1,22 @@
-## My Project
+## Nitro Secure Module library
 
-TODO: Fill this README out!
+This is a collection of helpers which Nitro Enclaves userland
+applications can use to communicate with a connected NitroSecureModule (NSM) device.
 
-Be sure to:
+Various operations can be requested such as:
+- PCR query and manipulation
+- Attestation
+- Entropy
 
-* Change the title in this README
-* Edit your repository description on GitHub
+## Prerequisites
+An up-to-date RUST toolchain (v1.41.0 or later)
 
-## Security
+## How To Build
+1. Clone the repository
+2. Execute `cargo build`
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+## How to integrate this module in your Nitro Enclaves project
+TODO: Link to AWS documentation
 
 ## License
 
