@@ -1,6 +1,6 @@
 [workspace]
-members = [ "src/nsm-driver", "src/nsm-io", "src/nsm-lib" ]
-default-members = [ "src/nsm-driver", "src/nsm-io", "src/nsm-lib" ]
+members = [ "nsm-driver", "nsm-io", "nsm-lib" ]
+default-members = [ "nsm-driver", "nsm-io", "nsm-lib" ]
 
 [profile.release]
 lto = true
