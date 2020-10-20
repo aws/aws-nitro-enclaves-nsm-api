@@ -1,0 +1,38 @@
+name: CI
+
+on: [push, pull_request]
+
+env:
+    RUSTFLAGS: -Dwarnings
+
+jobs:
+    test:
+        name: Test on rust ${{matrix.rust}}
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                rust: [1.40.0, stable, nightly]
+        steps:
+        - uses: actions/checkout@v2
+        - uses: dtolnay/rust-toolchain@master
+          with:
+              toolchain: ${{matrix.rust}}
+        - run: cargo test --all
+
+    clippy:
+        name: Clippy
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+        - uses: dtolnay/rust-toolchain@nightly
+        - run: rustup component add clippy
+        - run: cargo clippy --all
+
+    fmt:
+        name: Rustfmt
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+        - uses: dtolnay/rust-toolchain@nightly
+        - run: rustup component add rustfmt
+        - run: cargo fmt --all -- --check
