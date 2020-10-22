@@ -252,6 +252,7 @@ impl AttestationDoc {
     /// * user_data: optional user definted data included in the AttestationDoc
     /// * nonce: optional cryptographic nonce that will be included in the AttestationDoc
     /// * public_key: optional DER-encoded public key that will be included in the AttestationDoc
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         module_id: String,
         digest: Digest,
