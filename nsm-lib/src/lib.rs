@@ -1,16 +1,18 @@
 // Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+#![allow(clippy::missing_safety_doc)]
+
 //! ***NitroSecureModule wrappers for non-Rust callers***
 //! # Overview
 //! This module implements wrappers over the NSM Rust API which enable
 //! access to the API for non-Rust callers (ex.: C/C++ etc.).
 
 use nsm_driver::{nsm_exit, nsm_init, nsm_process_request};
-use nsm_driver::{nsm_get_raw_from_vec, nsm_get_vec_from_raw};
 use nsm_io::{Digest, ErrorCode, Request, Response};
 use serde_bytes::ByteBuf;
-use std::cmp;
+use std::ptr::copy_nonoverlapping;
+use std::{cmp, slice};
 
 #[repr(C)]
 pub struct NsmDescription {
@@ -260,4 +262,41 @@ pub unsafe extern "C" fn nsm_get_random(fd: i32, buf: *mut u8, buf_len: &mut usi
         Response::Error(err) => err,
         _ => ErrorCode::InvalidResponse,
     }
+}
+
+/// Obtain a vector from a raw C-style pointer and length.  
+/// *Argument 1 (input)*: The raw input pointer.  
+/// *Argument 2 (input)*: The length of the input buffer.  
+/// *Returns*: The corresponding Rust vector.
+unsafe fn nsm_get_vec_from_raw<T: Clone>(data: *const T, data_len: u32) -> Option<Vec<T>> {
+    if data.is_null() {
+        return None;
+    }
+
+    let slice = slice::from_raw_parts(data, data_len as usize);
+    Some(slice.to_vec())
+}
+
+/// Fill a raw buffer using the data from a vector.  
+/// *Argument 1 (input)*: The input vector's slice.  
+/// *Argument 2 (output)*: The raw buffer to be filled with the vector data.  
+/// *Argument 3 (input / output)*: The capacity of the output buffer as input and
+/// the actual size of the written data as output.  
+/// *Returns*: The status of the operation.
+unsafe fn nsm_get_raw_from_vec<T>(input: &[T], output: *mut T, output_size: &mut u32) -> ErrorCode {
+    if output.is_null() {
+        *output_size = 0;
+        return ErrorCode::BufferTooSmall;
+    }
+
+    let result = if *output_size as usize >= input.len() {
+        ErrorCode::Success
+    } else {
+        ErrorCode::BufferTooSmall
+    };
+
+    *output_size = cmp::min(*output_size, input.len() as u32);
+    copy_nonoverlapping(input.as_ptr(), output, *output_size as usize);
+
+    result
 }
