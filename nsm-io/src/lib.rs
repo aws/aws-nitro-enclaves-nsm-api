@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #![deny(missing_docs)]
+#![allow(clippy::upper_case_acronyms)]
 //! NitroSecurityModule IO
 //! # Overview
 //! This module contains the structure definitions that allows data interchange between
