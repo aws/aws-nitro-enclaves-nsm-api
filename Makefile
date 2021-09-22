@@ -39,5 +39,35 @@ clippy: nsm-api-stable
 		${CONTAINER_TAG}-stable \
 		cargo clippy --all
 
+eif_dir:
+	mkdir -p eifs/${HOST_MACHINE}/
+
+.build-nsm-test-cpp-docker: command-executer
+	docker build -f Dockerfiles/Dockerfile.test -t nsm-test-cpp --target nsm-test-cpp .
+
+.build-nsm-check-docker: command-executer
+	docker build -f Dockerfiles/Dockerfile.test -t nsm-check --target nsm-check .
+
+.build-nsm-multithread-docker: command-executer
+	docker build -f Dockerfiles/Dockerfile.test -t nsm-multithread --target nsm-multithread .
+
+.build-nsm-test-cpp-eif: .build-nsm-test-cpp-docker eif_dir
+	nitro-cli build-enclave --docker-uri nsm-test-cpp:latest --output-file eifs/${HOST_MACHINE}/nsm-test-cpp.eif
+
+.build-nsm-check-eif: .build-nsm-check-docker eif_dir
+	nitro-cli build-enclave --docker-uri nsm-check:latest --output-file eifs/${HOST_MACHINE}/nsm-check.eif
+
+.build-nsm-multithread-eif: .build-nsm-multithread-docker eif_dir
+	nitro-cli build-enclave --docker-uri nsm-multithread:latest --output-file eifs/${HOST_MACHINE}/nsm-multithread.eif
+
+run-nsm-test-cpp: .build-nsm-test-cpp-eif
+	nitro-cli run-enclave --cpu-count 4 --memory 2048 --eif-path eifs/${HOST_MACHINE}/nsm-test-cpp.eif --enclave-cid 16
+
+run-nsm-check-eif: .build-nsm-check-eif
+	nitro-cli run-enclave --cpu-count 4 --memory 2048 --eif-path eifs/${HOST_MACHINE}/nsm-check.eif --enclave-cid 16
+
+run-nsm-multithread-eif: .build-nsm-multithread-eif
+	nitro-cli run-enclave --cpu-count 4 --memory 2048 --eif-path eifs/${HOST_MACHINE}/nsm-multithread.eif --enclave-cid 16 --debug-mode
+
 clean:
 	rm -rf ./target
