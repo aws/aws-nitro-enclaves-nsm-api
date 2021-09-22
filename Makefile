@@ -54,17 +54,23 @@ clippy: nsm-api-${STABLE}
 eif_dir:
 	mkdir -p eifs/${HOST_MACHINE}/
 
-.build-nsm-test-cpp-docker:
+command-executer-build:
+	git clone https://github.com/aws/aws-nitro-enclaves-cli
+	cd aws-nitro-enclaves-cli && make command-executer
+	cp -r aws-nitro-enclaves-cli/build/command-executer .
+	rm -rf aws-nitro-enclaves-cli
+
+.build-nsm-test-cpp-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		-f Dockerfiles/Dockerfile.test -t nsm-test-cpp --target nsm-test-cpp .
 
-.build-nsm-check-docker:
+.build-nsm-check-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		-f Dockerfiles/Dockerfile.test -t nsm-check --target nsm-check .
 
-.build-nsm-multithread-docker:
+.build-nsm-multithread-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		-f Dockerfiles/Dockerfile.test -t nsm-multithread --target nsm-multithread .
