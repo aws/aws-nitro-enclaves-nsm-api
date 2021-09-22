@@ -42,6 +42,12 @@ clippy: nsm-api-stable
 eif_dir:
 	mkdir -p eifs/${HOST_MACHINE}/
 
+command-executer: command-executer
+	git clone https://github.com/aws/aws-nitro-enclaves-cli
+	cd aws-nitro-enclaves-cli && make command-executer
+	cp -r aws-nitro-enclaves-cli/build/command-executer .
+	rm -rf aws-nitro-enclaves-cli
+
 .build-nsm-test-cpp-docker: command-executer
 	docker build -f Dockerfiles/Dockerfile.test -t nsm-test-cpp --target nsm-test-cpp .
 
