@@ -22,3 +22,9 @@ TODO: Link to AWS documentation
 
 This project is licensed under the Apache-2.0 License.
 
+## Security issue notifications
+
+If you discover a potential security issue in the Nitro Enclaves NSM API, we ask that you notify AWS
+Security via our
+[vulnerability reporting page](https://aws.amazon.com/security/vulnerability-reporting/).
+Please do **not** create a public GitHub issue.
