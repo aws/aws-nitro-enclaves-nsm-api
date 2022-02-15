@@ -216,7 +216,7 @@ pub struct AttestationDoc {
     /// Can be: "SHA256" | "SHA512"
     pub digest: Digest,
 
-    /// UTC time when document was created expressed as seconds since Unix Epoch
+    /// UTC time when document was created expressed as milliseconds since Unix Epoch
     pub timestamp: u64,
 
     /// Map of all locked PCRs at the moment the attestation document was generated
