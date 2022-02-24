@@ -1,4 +1,4 @@
-// Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// Copyright 2020-2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 //! ***NitroSecureModule driver communication support***
@@ -12,13 +12,13 @@
 //! the user, which then gets populated with information from the NSM driver and
 //! then decoded from CBOR.
 
+use crate::api::{ErrorCode, Request, Response};
 use libc::ioctl;
 use log::{debug, error};
 use nix::errno::Errno;
 use nix::request_code_readwrite;
 use nix::sys::uio::IoVec;
 use nix::unistd::close;
-use nsm_io::{ErrorCode, Request, Response};
 
 use std::fs::OpenOptions;
 use std::mem;

@@ -8,8 +8,8 @@
 //! This module implements wrappers over the NSM Rust API which enable
 //! access to the API for non-Rust callers (ex.: C/C++ etc.).
 
-use nsm_driver::{nsm_exit, nsm_init, nsm_process_request};
-use nsm_io::{Digest, ErrorCode, Request, Response};
+use aws_nitro_enclaves_nsm_api::api::{Digest, ErrorCode, Request, Response};
+use aws_nitro_enclaves_nsm_api::driver::{nsm_exit, nsm_init, nsm_process_request};
 use serde_bytes::ByteBuf;
 use std::ptr::copy_nonoverlapping;
 use std::{cmp, slice};

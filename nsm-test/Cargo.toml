@@ -10,8 +10,7 @@ config_emulated = []
 [dependencies]
 serde_bytes = "0.11"
 serde_cbor = "0.11"
-nsm-io = { path = "../nsm-io" }
-nsm-driver = { path = "../nsm-driver" }
+aws-nitro-enclaves-nsm-api = { path = "../" }
 nsm-lib = { path = "../nsm-lib" }
 nix = "0.20"
 threadpool = "1.7"
