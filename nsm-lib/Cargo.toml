@@ -6,8 +6,7 @@ edition = "2018"
 license = "Apache-2.0"
 
 [dependencies]
-nsm-io = { path = "../nsm-io" }
-nsm-driver = { path = "../nsm-driver" }
+aws-nitro-enclaves-nsm-api = { path = "../" }
 serde_bytes = "0.11"
 
 [build-dependencies]

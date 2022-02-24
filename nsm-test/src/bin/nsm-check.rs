@@ -7,8 +7,8 @@
 //! This module implements a comprehensive run-time test for the
 //! NSM Rust API.
 
-use nsm_driver::{nsm_exit, nsm_init, nsm_process_request};
-use nsm_io::{Digest, Request, Response};
+use aws_nitro_enclaves_nsm_api::api::{Digest, Request, Response};
+use aws_nitro_enclaves_nsm_api::driver::{nsm_exit, nsm_init, nsm_process_request};
 use serde_bytes::ByteBuf;
 use std::collections::BTreeSet;
 

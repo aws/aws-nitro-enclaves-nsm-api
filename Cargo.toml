@@ -10,12 +10,16 @@ categories = ["hardware-support"]
 repository = "https://github.com/aws/aws-nitro-enclaves-nsm-api"
 
 [workspace]
-members = [ ".", "nsm-driver", "nsm-io", "nsm-lib", "nsm-test" ]
-default-members = [ ".", "nsm-driver", "nsm-io" ]
+members = [ ".", "nsm-lib", "nsm-test" ]
+default-members = [ "." ]
 
 [profile.release]
 lto = true
 
 [dependencies]
-nsm-io = { path = "./nsm-io", version = "0.2.0"}
-nsm-driver = { path = "./nsm-driver", version = "0.2.0" }
+nix = "0.20"
+libc = "0.2"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_bytes = "0.11"
+serde_cbor = "0.11"
