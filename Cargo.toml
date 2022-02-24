@@ -5,7 +5,7 @@ authors = ["The AWS Nitro Enclaves Team <aws-nitro-enclaves-devel@amazon.com>"]
 edition = "2018"
 license = "Apache-2.0"
 description = "This library provides the API for the Nitro Secure Module used in AWS Nitro Enclaves."
-keywords = ["Nitro Enclaves", "AWS", "Nitro Secure Module"]
+keywords = ["Nitro", "Enclaves", "AWS"]
 categories = ["hardware-support"]
 repository = "https://github.com/aws/aws-nitro-enclaves-nsm-api"
 
