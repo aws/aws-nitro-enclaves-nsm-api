@@ -1,6 +1,17 @@
+[package]
+name = "aws-nitro-enclaves-nsm-api"
+version = "0.2.0"
+authors = ["The AWS Nitro Enclaves Team <aws-nitro-enclaves-devel@amazon.com>"]
+edition = "2018"
+license = "Apache-2.0"
+
 [workspace]
-members = [ "nsm-driver", "nsm-io", "nsm-lib", "nsm-test" ]
-default-members = [ "nsm-driver", "nsm-io", "nsm-lib", "nsm-test" ]
+members = [ ".", "nsm-driver", "nsm-io", "nsm-lib", "nsm-test" ]
+default-members = [ ".", "nsm-driver", "nsm-io" ]
 
 [profile.release]
 lto = true
+
+[dependencies]
+nsm-io = { path = "./nsm-io", version = "0.2.0"}
+nsm-driver = { path = "./nsm-driver", version = "0.2.0" }
