@@ -12,7 +12,7 @@ include_guard = "NSM_LIB_H"
 
 [parse]
 parse_deps = true
-include = ["nsm-io"]
+include = ["aws-nitro-enclaves-nsm-api"]
 
 [enum]
 rename_variants = "QualifiedScreamingSnakeCase"
