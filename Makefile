@@ -14,19 +14,19 @@ NIGHTLY          = nightly
 	docker image build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		--build-arg RUST_VERSION=${COMP_VERSION} \
-		-t ${CONTAINER_TAG}-${COMP_VERSION} -f ${BUILD_DOCKERFILE} ${DOCKERFILES_PATH}
+		-t ${CONTAINER_TAG}-${COMP_VERSION} -f ${BUILD_DOCKERFILE} ${SRC_PATH}
 
 .build-${HOST_MACHINE}-${STABLE}:
 	docker image build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		--build-arg RUST_VERSION=${STABLE} \
-		-t ${CONTAINER_TAG}-${STABLE} -f ${BUILD_DOCKERFILE} ${DOCKERFILES_PATH}
+		-t ${CONTAINER_TAG}-${STABLE} -f ${BUILD_DOCKERFILE} ${SRC_PATH}
 
 .build-${HOST_MACHINE}-${NIGHTLY}: ${DOCKERFILES_PATH}
 	docker image build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		--build-arg RUST_VERSION=${NIGHTLY} \
-		-t ${CONTAINER_TAG}-${NIGHTLY} -f ${BUILD_DOCKERFILE} ${DOCKERFILES_PATH}
+		-t ${CONTAINER_TAG}-${NIGHTLY} -f ${BUILD_DOCKERFILE} ${SRC_PATH}
 
 nsm-api-${COMP_VERSION}: .build-${HOST_MACHINE}-${COMP_VERSION}
 	docker run \
@@ -35,7 +35,6 @@ nsm-api-${COMP_VERSION}: .build-${HOST_MACHINE}-${COMP_VERSION}
 
 nsm-api-${STABLE}: .build-${HOST_MACHINE}-${STABLE}
 	docker run \
-		-v ${SRC_PATH}:/build \
 		${CONTAINER_TAG}-${STABLE} \
 		/bin/bash -c "cargo build && cargo test --all"
 
@@ -66,17 +65,17 @@ command-executer-build:
 .build-nsm-test-cpp-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
-		-f ${TEST_DOCKERFILE} -t nsm-test-cpp --target nsm-test-cpp ${DOCKERFILES_PATH}
+		-f ${TEST_DOCKERFILE} -t nsm-test-cpp --target nsm-test-cpp ${SRC_PATH}
 
 .build-nsm-check-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
-		-f ${TEST_DOCKERFILE} -t nsm-check --target nsm-check ${DOCKERFILES_PATH}
+		-f ${TEST_DOCKERFILE} -t nsm-check --target nsm-check ${SRC_PATH}
 
 .build-nsm-multithread-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
-		-f ${TEST_DOCKERFILE} -t nsm-multithread --target nsm-multithread ${DOCKERFILES_PATH}
+		-f ${TEST_DOCKERFILE} -t nsm-multithread --target nsm-multithread ${SRC_PATH}
 
 .build-nsm-test-cpp-eif: .build-nsm-test-cpp-docker eif_dir
 	nitro-cli build-enclave --docker-uri nsm-test-cpp:latest --output-file eifs/${HOST_MACHINE}/nsm-test-cpp.eif
@@ -97,4 +96,4 @@ run-nsm-multithread-eif: .build-nsm-multithread-eif
 	nitro-cli run-enclave --cpu-count 4 --memory 2048 --eif-path eifs/${HOST_MACHINE}/nsm-multithread.eif --enclave-cid 16 --debug-mode
 
 clean:
-	rm -rf ./target
+	cargo clean
