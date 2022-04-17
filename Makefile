@@ -1,29 +1,32 @@
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
-HOST_MACHINE    = $(shell uname -m)
-CONTAINER_TAG   = nsm-api
-DOCKERFILE_PATH = Dockerfiles/Dockerfile.build
-COMP_VERSION    = 1.40
-STABLE          = stable
-NIGHTLY         = nightly
+SRC_PATH         = $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+HOST_MACHINE     = $(shell uname -m)
+CONTAINER_TAG    = nsm-api
+DOCKERFILES_PATH = ${SRC_PATH}/Dockerfiles
+BUILD_DOCKERFILE = ${DOCKERFILES_PATH}/Dockerfile.build
+TEST_DOCKERFILE  = ${DOCKERFILES_PATH}/Dockerfile.test
+COMP_VERSION     = 1.40
+STABLE           = stable
+NIGHTLY          = nightly
 
-.build-${HOST_MACHINE}-${COMP_VERSION}: ${DOCKERFILE_PATH}
+.build-${HOST_MACHINE}-${COMP_VERSION}: ${DOCKERFILES_PATH}
 	docker image build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		--build-arg RUST_VERSION=${COMP_VERSION} \
-		-t ${CONTAINER_TAG}-${COMP_VERSION} -f ${DOCKERFILE_PATH} .
+		-t ${CONTAINER_TAG}-${COMP_VERSION} -f ${BUILD_DOCKERFILE} ${DOCKERFILES_PATH}
 
 .build-${HOST_MACHINE}-${STABLE}:
 	docker image build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		--build-arg RUST_VERSION=${STABLE} \
-		-t ${CONTAINER_TAG}-${STABLE} -f ${DOCKERFILE_PATH} .
+		-t ${CONTAINER_TAG}-${STABLE} -f ${BUILD_DOCKERFILE} ${DOCKERFILES_PATH}
 
-.build-${HOST_MACHINE}-${NIGHTLY}: ${DOCKERFILE_PATH}
+.build-${HOST_MACHINE}-${NIGHTLY}: ${DOCKERFILES_PATH}
 	docker image build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		--build-arg RUST_VERSION=${NIGHTLY} \
-		-t ${CONTAINER_TAG}-${NIGHTLY} -f ${DOCKERFILE_PATH} .
+		-t ${CONTAINER_TAG}-${NIGHTLY} -f ${BUILD_DOCKERFILE} ${DOCKERFILES_PATH}
 
 nsm-api-${COMP_VERSION}: .build-${HOST_MACHINE}-${COMP_VERSION}
 	docker run \
@@ -32,7 +35,7 @@ nsm-api-${COMP_VERSION}: .build-${HOST_MACHINE}-${COMP_VERSION}
 
 nsm-api-${STABLE}: .build-${HOST_MACHINE}-${STABLE}
 	docker run \
-		-v /home/ec2-user/aws-nitro-enclaves-nsm-api/:/build \
+		-v ${SRC_PATH}:/build \
 		${CONTAINER_TAG}-${STABLE} \
 		/bin/bash -c "cargo build && cargo test --all"
 
@@ -63,17 +66,17 @@ command-executer-build:
 .build-nsm-test-cpp-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
-		-f Dockerfiles/Dockerfile.test -t nsm-test-cpp --target nsm-test-cpp .
+		-f ${TEST_DOCKERFILE} -t nsm-test-cpp --target nsm-test-cpp ${DOCKERFILES_PATH}
 
 .build-nsm-check-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
-		-f Dockerfiles/Dockerfile.test -t nsm-check --target nsm-check .
+		-f ${TEST_DOCKERFILE} -t nsm-check --target nsm-check ${DOCKERFILES_PATH}
 
 .build-nsm-multithread-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
-		-f Dockerfiles/Dockerfile.test -t nsm-multithread --target nsm-multithread .
+		-f ${TEST_DOCKERFILE} -t nsm-multithread --target nsm-multithread ${DOCKERFILES_PATH}
 
 .build-nsm-test-cpp-eif: .build-nsm-test-cpp-docker eif_dir
 	nitro-cli build-enclave --docker-uri nsm-test-cpp:latest --output-file eifs/${HOST_MACHINE}/nsm-test-cpp.eif
