@@ -6,7 +6,7 @@ CONTAINER_TAG    = nsm-api
 DOCKERFILES_PATH = ${SRC_PATH}/Dockerfiles
 BUILD_DOCKERFILE = ${DOCKERFILES_PATH}/Dockerfile.build
 TEST_DOCKERFILE  = ${DOCKERFILES_PATH}/Dockerfile.test
-COMP_VERSION     = 1.40
+COMP_VERSION     = 1.58.1
 STABLE           = stable
 NIGHTLY          = nightly
 
