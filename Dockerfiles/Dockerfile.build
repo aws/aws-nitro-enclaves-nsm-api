@@ -5,14 +5,14 @@ ARG RUST_VERSION=stable
 ENV RUST_VERSION=${RUST_VERSION}
 
 # Update default packages
-RUN yum update
+RUN yum update -y
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH
 
 RUN set -eux; \
-    yum update; \
+    yum update -y; \
     yum install -y \
         ca-certificates \
         gcc \
