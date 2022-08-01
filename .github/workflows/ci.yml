@@ -18,11 +18,17 @@ jobs:
         strategy:
             matrix:
                 rust: [1.46.0, stable, nightly]
+                include:
+                  - rust: 1.46.0
+                    disable_lints: "-A derive_partial_eq_without_eq"
+
         steps:
         - uses: actions/checkout@v2
         - uses: dtolnay/rust-toolchain@master
           with:
               toolchain: ${{matrix.rust}}
+              if: ${{matrix.disable_lints}}
+              args: ${{matrix.disable_lints}}
         - run: cargo test --all
 
     clippy:
