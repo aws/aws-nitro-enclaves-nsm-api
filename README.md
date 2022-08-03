@@ -9,7 +9,7 @@ Various operations can be requested such as:
 - Entropy
 
 ## Prerequisites
-An up-to-date RUST toolchain (v1.41.0 or later)
+An up-to-date RUST toolchain (v1.58.1 or later)
 
 ## How To Build
 1. Clone the repository
