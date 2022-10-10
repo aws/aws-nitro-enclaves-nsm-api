@@ -368,7 +368,7 @@ fn check_attestation(ctx: i32) {
     check_single_attestation(ctx, None, None, None);
     println!("Checked Request::Attestation without any data.");
 
-    check_single_attestation(ctx, Some(dummy_data.clone())), None, None);
+    check_single_attestation(ctx, Some(dummy_data.clone()), None, None);
     println!(
         "Checked Request::Attestation with user data ({} bytes).",
         DATA_LEN
