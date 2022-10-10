@@ -197,8 +197,7 @@ pub extern "C" fn nsm_get_description(fd: i32, nsm_description: &mut NsmDescript
 /// *Argument 2 (input)*: Size of the user data buffer.  
 /// *Returns*: The optional byte buffer.
 unsafe fn get_byte_buf_from_user_data(data: *const u8, len: u32) -> Option<Vec<u8>> {
-    let data_vec = nsm_get_vec_from_raw(data, len);
-    data_vec
+    nsm_get_vec_from_raw(data, len)
 }
 
 /// NSM `GetAttestationDoc` operation for non-Rust callers.  

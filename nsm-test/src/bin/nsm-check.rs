@@ -389,7 +389,7 @@ fn check_attestation(ctx: i32) {
         ctx,
         Some(dummy_data.clone()),
         Some(dummy_data.clone()),
-        Some(dummy_data.clone()),
+        Some(dummy_data),
     );
     println!(
         "Checked Request::Attestation with user data, nonce and public key ({} bytes each).",

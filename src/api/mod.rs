@@ -267,7 +267,7 @@ impl AttestationDoc {
             certificate,
             user_data,
             nonce,
-            public_key: public_key,
+            public_key,
         }
     }
 
