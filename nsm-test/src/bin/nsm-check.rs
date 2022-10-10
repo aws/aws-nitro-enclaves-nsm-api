@@ -387,9 +387,9 @@ fn check_attestation(ctx: i32) {
 
     check_single_attestation(
         ctx,
-        Some(dummy_data[..].clone()),
-        Some(dummy_data[..].clone()),
-        Some(dummy_data[..].clone()),
+        Some(dummy_data.clone()),
+        Some(dummy_data.clone()),
+        Some(dummy_data.clone()),
     );
     println!(
         "Checked Request::Attestation with user data, nonce and public key ({} bytes each).",
