@@ -257,29 +257,16 @@ impl AttestationDoc {
         nonce: Option<Vec<u8>>,
         public_key: Option<Vec<u8>>,
     ) -> Self {
-        let mut pcrs_serialized = BTreeMap::new();
-
-        for (i, pcr) in pcrs.into_iter() {
-            // let pcr = ByteBuf::from(pcr);
-            pcrs_serialized.insert(i, pcr);
-        }
-
-        // let cabundle_serialized = cabundle.into_iter().map(ByteBuf::from).collect();
-        let cabundle_serialized = cabundle;
 
         AttestationDoc {
             module_id,
             digest,
             timestamp,
-            pcrs: pcrs_serialized,
-            cabundle: cabundle_serialized,
-            // certificate: ByteBuf::from(certificate),
-            certificate: certificate,
-            // user_data: user_data.map(ByteBuf::from),
-            user_data: user_data,
-            // nonce: nonce.map(ByteBuf::from),
-            nonce: nonce,
-            // public_key: public_key.map(ByteBuf::from),
+            pcrs,
+            cabundle,
+            certificate,
+            user_data,
+            nonce,
             public_key: public_key,
         }
     }

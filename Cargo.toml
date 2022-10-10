@@ -21,4 +21,4 @@ lto = true
 nix = "0.20"
 libc = "0.2"
 log = "0.4"
-minicbor = { version = "0.18.0", features = ["derive", "alloc"] }
+minicbor = { version = "0.18", features = ["derive", "alloc"] }
