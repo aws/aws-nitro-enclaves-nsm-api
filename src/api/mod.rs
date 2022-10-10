@@ -10,22 +10,18 @@
 //! easy IPC between components.
 
 // BTreeMap preserves ordering, which makes the tests easier to write
+use minicbor::{Decode, Encode};
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Error as IoError;
 use std::result;
-
-use serde::{Deserialize, Serialize};
-use serde_bytes::ByteBuf;
-use serde_cbor::error::Error as CborError;
-use serde_cbor::{from_slice, to_vec};
 
 #[derive(Debug)]
 /// Possible error types return from this library.
 pub enum Error {
     /// An IO error of type `std::io::Error`
     Io(IoError),
-    /// A CBOR ser/de error of type `serde_cbor::error::Error`.
-    Cbor(CborError),
+    /// An error attempting to decode with the `minicbor` library.
+    CborDecode(minicbor::decode::Error),
 }
 
 /// Result type return nsm-io::Error on failure.
@@ -37,205 +33,201 @@ impl From<IoError> for Error {
     }
 }
 
-impl From<CborError> for Error {
-    fn from(error: CborError) -> Self {
-        Error::Cbor(error)
+impl From<minicbor::decode::Error> for Error {
+    fn from(error: minicbor::decode::Error) -> Self {
+        Error::CborDecode(error)
     }
 }
 
 /// List of error codes that the NSM module can return as part of a Response
 #[repr(C)]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Encode, Decode)]
 pub enum ErrorCode {
     /// No errors
-    Success,
+     #[n(0)] Success,
 
     /// Input argument(s) invalid
-    InvalidArgument,
+     #[n(1)] InvalidArgument,
 
     /// PlatformConfigurationRegister index out of bounds
-    InvalidIndex,
+     #[n(2)] InvalidIndex,
 
     /// The received response does not correspond to the earlier request
-    InvalidResponse,
+     #[n(3)] InvalidResponse,
 
     /// PlatformConfigurationRegister is in read-only mode and the operation
     /// attempted to modify it
-    ReadOnlyIndex,
+     #[n(4)] ReadOnlyIndex,
 
     /// Given request cannot be fulfilled due to missing capabilities
-    InvalidOperation,
+     #[n(5)] InvalidOperation,
 
     /// Operation succeeded but provided output buffer is too small
-    BufferTooSmall,
+     #[n(6)] BufferTooSmall,
 
     /// The user-provided input is too large
-    InputTooLarge,
+     #[n(7)] InputTooLarge,
 
     /// NitroSecureModule cannot fulfill request due to internal errors
-    InternalError,
+     #[n(8)] InternalError,
 }
 
 /// Operations that a NitroSecureModule should implement. Assumes 64K registers will be enough for everyone.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Encode, Decode)]
 #[non_exhaustive]
 pub enum Request {
     /// Read data from PlatformConfigurationRegister at `index`
-    DescribePCR {
+     #[n(0)] DescribePCR {
         /// index of the PCR to describe
-        index: u16,
+        #[n(0)] index: u16,
     },
 
     /// Extend PlatformConfigurationRegister at `index` with `data`
-    ExtendPCR {
+    #[n(1)] ExtendPCR {
         /// index the PCR to extend
-        index: u16,
+        #[n(0)] index: u16,
 
-        #[serde(with = "serde_bytes")]
         /// data to extend it with
-        data: Vec<u8>,
+        #[n(1)] data: Vec<u8>,
     },
 
     /// Lock PlatformConfigurationRegister at `index` from further modifications
-    LockPCR {
+    #[n(2)] LockPCR {
         /// index to lock
-        index: u16,
+        #[n(0)] index: u16,
     },
 
     /// Lock PlatformConfigurationRegisters at indexes `[0, range)` from further modifications
-    LockPCRs {
+    #[n(3)] LockPCRs {
         /// number of PCRs to lock, starting from index 0
-        range: u16,
+        #[n(0)] range: u16,
     },
 
     /// Return capabilities and version of the connected NitroSecureModule. Clients are recommended to decode
     /// major_version and minor_version first, and use an appropriate structure to hold this data, or fail
     /// if the version is not supported.
-    DescribeNSM,
+    #[n(4)] DescribeNSM,
 
     /// Requests the NSM to create an AttestationDoc and sign it with it's private key to ensure
     /// authenticity.
-    Attestation {
+    #[n(5)] Attestation {
         /// Includes additional user data in the AttestationDoc.
-        user_data: Option<ByteBuf>,
+        #[n(0)] user_data: Option<Vec<u8>>,
 
         /// Includes an additional nonce in the AttestationDoc.
-        nonce: Option<ByteBuf>,
+        #[n(1)] nonce: Option<Vec<u8>>,
 
         /// Includes a user provided public key in the AttestationDoc.
-        public_key: Option<ByteBuf>,
+        #[n(2)] public_key: Option<Vec<u8>>,
     },
 
     /// Requests entropy from the NSM side.
-    GetRandom,
+    #[n(6)] GetRandom,
 }
 
 /// Responses received from a NitroSecureModule as a result of a Request
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Encode, Decode)]
 #[non_exhaustive]
 pub enum Response {
     /// returns the current PlatformConfigurationRegister state
-    DescribePCR {
+    #[n(0)]  DescribePCR {
         /// true if the PCR is read-only, false otherwise
-        lock: bool,
-        #[serde(with = "serde_bytes")]
+        #[n(0)] lock: bool,
         /// the current value of the PCR
-        data: Vec<u8>,
+        #[n(1)] data: Vec<u8>,
     },
 
     /// returned if PlatformConfigurationRegister has been successfully extended
-    ExtendPCR {
-        #[serde(with = "serde_bytes")]
+    #[n(1)] ExtendPCR {
         /// The new value of the PCR after extending the data into the register.
-        data: Vec<u8>,
+        #[n(0)] data: Vec<u8>,
     },
 
     /// returned if PlatformConfigurationRegister has been successfully locked
-    LockPCR,
+    #[n(2)] LockPCR,
 
     /// returned if PlatformConfigurationRegisters have been successfully locked
-    LockPCRs,
+    #[n(3)] LockPCRs,
 
     /// returns the runtime configuration of the NitroSecureModule
-    DescribeNSM {
+    #[n(4)] DescribeNSM {
         /// Breaking API changes are denoted by `major_version`
-        version_major: u16,
+        #[n(0)] version_major: u16,
         /// Minor API changes are denoted by `minor_version`. Minor versions should be backwards compatible.
-        version_minor: u16,
+        #[n(1)] version_minor: u16,
         /// Patch version. These are security and stability updates and do not affect API.
-        version_patch: u16,
+        #[n(2)] version_patch: u16,
         /// `module_id` is an identifier for a singular NitroSecureModule
-        module_id: String,
+        #[n(3)] module_id: String,
         /// The maximum number of PCRs exposed by the NitroSecureModule.
-        max_pcrs: u16,
+        #[n(4)] max_pcrs: u16,
         /// The PCRs that are read-only.
-        locked_pcrs: BTreeSet<u16>,
+        #[n(5)] locked_pcrs: BTreeSet<u16>,
         /// The digest of the PCR Bank
-        digest: Digest,
+        #[n(6)] digest: Digest,
     },
 
     /// A response to an Attestation Request containing the CBOR-encoded AttestationDoc and the
     /// signature generated from the doc by the NitroSecureModule
-    Attestation {
+    #[n(5)] Attestation {
         /// A signed COSE structure containing a CBOR-encoded AttestationDocument as the payload.
-        #[serde(with = "serde_bytes")]
-        document: Vec<u8>,
+       #[n(0)] document: Vec<u8>,
     },
 
     /// A response containing a number of bytes of entropy.
-    GetRandom {
-        #[serde(with = "serde_bytes")]
+    #[n(6)] GetRandom {
         /// The random bytes.
-        random: Vec<u8>,
+        #[n(0)] random: Vec<u8>,
     },
 
     /// An error has occured, and the NitroSecureModule could not successfully complete the operation
-    Error(ErrorCode),
+    #[n(7)] Error(#[n(0)] ErrorCode),
 }
 
 /// The digest implementation used by a NitroSecureModule
 #[repr(C)]
-#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Encode, Decode)]
 pub enum Digest {
     /// SHA256
-    SHA256,
+    #[n(0)] SHA256,
     /// SHA384
-    SHA384,
+    #[n(1)] SHA384,
     /// SHA512
-    SHA512,
+    #[n(2)] SHA512,
 }
 
 /// An attestation response.  This is also used for sealing
 /// data.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Encode, Decode)]
 pub struct AttestationDoc {
     /// Issuing NSM ID
-    pub module_id: String,
+    #[n(0)] pub module_id: String,
 
     /// The digest function used for calculating the register values
     /// Can be: "SHA256" | "SHA512"
-    pub digest: Digest,
+    #[n(1)] pub digest: Digest,
 
     /// UTC time when document was created expressed as milliseconds since Unix Epoch
-    pub timestamp: u64,
+    #[n(2)] pub timestamp: u64,
 
     /// Map of all locked PCRs at the moment the attestation document was generated
-    pub pcrs: BTreeMap<usize, ByteBuf>,
+    #[n(3)] pub pcrs: BTreeMap<usize, Vec<u8>>,
 
     /// The infrastucture certificate used to sign the document, DER encoded
-    pub certificate: ByteBuf,
+    #[n(4)] pub certificate: Vec<u8>,
+
     /// Issuing CA bundle for infrastructure certificate
-    pub cabundle: Vec<ByteBuf>,
+    #[n(5)] pub cabundle: Vec<Vec<u8>>,
 
     /// An optional DER-encoded key the attestation consumer can use to encrypt data with
-    pub public_key: Option<ByteBuf>,
+    #[n(6)] pub public_key: Option<Vec<u8>>,
 
     /// Additional signed user data, as defined by protocol.
-    pub user_data: Option<ByteBuf>,
+    #[n(7)] pub user_data: Option<Vec<u8>>,
 
     /// An optional cryptographic nonce provided by the attestation consumer as a proof of
     /// authenticity.
-    pub nonce: Option<ByteBuf>,
+    #[n(8)] pub nonce: Option<Vec<u8>>,
 }
 
 impl AttestationDoc {
@@ -268,11 +260,12 @@ impl AttestationDoc {
         let mut pcrs_serialized = BTreeMap::new();
 
         for (i, pcr) in pcrs.into_iter() {
-            let pcr = ByteBuf::from(pcr);
+            // let pcr = ByteBuf::from(pcr);
             pcrs_serialized.insert(i, pcr);
         }
 
-        let cabundle_serialized = cabundle.into_iter().map(ByteBuf::from).collect();
+        // let cabundle_serialized = cabundle.into_iter().map(ByteBuf::from).collect();
+        let cabundle_serialized = cabundle;
 
         AttestationDoc {
             module_id,
@@ -280,23 +273,27 @@ impl AttestationDoc {
             timestamp,
             pcrs: pcrs_serialized,
             cabundle: cabundle_serialized,
-            certificate: ByteBuf::from(certificate),
-            user_data: user_data.map(ByteBuf::from),
-            nonce: nonce.map(ByteBuf::from),
-            public_key: public_key.map(ByteBuf::from),
+            // certificate: ByteBuf::from(certificate),
+            certificate: certificate,
+            // user_data: user_data.map(ByteBuf::from),
+            user_data: user_data,
+            // nonce: nonce.map(ByteBuf::from),
+            nonce: nonce,
+            // public_key: public_key.map(ByteBuf::from),
+            public_key: public_key,
         }
     }
 
     /// Helper function that converts an AttestationDoc structure to its CBOR representation
     pub fn to_binary(&self) -> Vec<u8> {
-        // This should not fail
-        to_vec(self).unwrap()
+        // `to_vec` is infallible: https://gitlab.com/twittner/minicbor/-/blob/develop/minicbor/src/lib.rs#L196
+        minicbor::to_vec(self).expect("`minicbor::to_vec` is infallible")
     }
 
     /// Helper function that parses a CBOR representation of an AttestationDoc and creates the
     /// structure from it, if possible.
     pub fn from_binary(bin: &[u8]) -> Result<Self> {
-        from_slice(bin).map_err(Error::Cbor)
+        minicbor::decode(bin).map_err(Error::CborDecode)
     }
 }
 

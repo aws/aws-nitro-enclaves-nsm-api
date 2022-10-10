@@ -11,7 +11,6 @@
 pub use aws_nitro_enclaves_nsm_api::api::{Digest, ErrorCode};
 use aws_nitro_enclaves_nsm_api::api::{Request, Response};
 use aws_nitro_enclaves_nsm_api::driver::{nsm_exit, nsm_init, nsm_process_request};
-use serde_bytes::ByteBuf;
 use std::ptr::copy_nonoverlapping;
 use std::{cmp, slice};
 
@@ -197,9 +196,9 @@ pub extern "C" fn nsm_get_description(fd: i32, nsm_description: &mut NsmDescript
 /// *Argument 1 (input)*: User data.  
 /// *Argument 2 (input)*: Size of the user data buffer.  
 /// *Returns*: The optional byte buffer.
-unsafe fn get_byte_buf_from_user_data(data: *const u8, len: u32) -> Option<ByteBuf> {
+unsafe fn get_byte_buf_from_user_data(data: *const u8, len: u32) -> Option<Vec<u8>> {
     let data_vec = nsm_get_vec_from_raw(data, len);
-    data_vec.map(ByteBuf::from)
+    data_vec
 }
 
 /// NSM `GetAttestationDoc` operation for non-Rust callers.  

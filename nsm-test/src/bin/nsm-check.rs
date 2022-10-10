@@ -9,7 +9,6 @@
 
 use aws_nitro_enclaves_nsm_api::api::{Digest, Request, Response};
 use aws_nitro_enclaves_nsm_api::driver::{nsm_exit, nsm_init, nsm_process_request};
-use serde_bytes::ByteBuf;
 use std::collections::BTreeSet;
 
 const RESERVED_PCRS: u16 = 5;
@@ -337,9 +336,9 @@ fn check_pcr_locks(ctx: i32, description: &NsmDescription) {
 /// *Argument 4 (input)*: Optional public key.
 fn check_single_attestation(
     ctx: i32,
-    user_data: Option<ByteBuf>,
-    nonce: Option<ByteBuf>,
-    public_key: Option<ByteBuf>,
+    user_data: Option<Vec<u8>>,
+    nonce: Option<Vec<u8>>,
+    public_key: Option<Vec<u8>>,
 ) {
     let response = nsm_process_request(
         ctx,
@@ -369,7 +368,7 @@ fn check_attestation(ctx: i32) {
     check_single_attestation(ctx, None, None, None);
     println!("Checked Request::Attestation without any data.");
 
-    check_single_attestation(ctx, Some(ByteBuf::from(&dummy_data[..])), None, None);
+    check_single_attestation(ctx, Some(dummy_data.clone())), None, None);
     println!(
         "Checked Request::Attestation with user data ({} bytes).",
         DATA_LEN
@@ -377,8 +376,8 @@ fn check_attestation(ctx: i32) {
 
     check_single_attestation(
         ctx,
-        Some(ByteBuf::from(&dummy_data[..])),
-        Some(ByteBuf::from(&dummy_data[..])),
+        Some(dummy_data.clone()),
+        Some(dummy_data.clone()),
         None,
     );
     println!(
@@ -388,9 +387,9 @@ fn check_attestation(ctx: i32) {
 
     check_single_attestation(
         ctx,
-        Some(ByteBuf::from(&dummy_data[..])),
-        Some(ByteBuf::from(&dummy_data[..])),
-        Some(ByteBuf::from(&dummy_data[..])),
+        Some(dummy_data[..].clone()),
+        Some(dummy_data[..].clone()),
+        Some(dummy_data[..].clone()),
     );
     println!(
         "Checked Request::Attestation with user data, nonce and public key ({} bytes each).",
