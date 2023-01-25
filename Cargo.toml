@@ -27,4 +27,3 @@ serde_cbor = "0.11"
 
 [features]
 default = ["nix"]
-nix = ["dep:nix"]
