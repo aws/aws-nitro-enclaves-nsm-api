@@ -10,7 +10,6 @@
 
 use aws_nitro_enclaves_nsm_api::api::{Request, Response};
 use aws_nitro_enclaves_nsm_api::driver::{nsm_exit, nsm_init, nsm_process_request};
-use serde_bytes::ByteBuf;
 use std::convert::TryInto;
 use std::sync::atomic;
 use std::sync::Arc;
@@ -54,9 +53,9 @@ fn extend_pcr(ctx: i32, j: usize) {
 /// Returns Ok(()) in case of success
 fn check_single_attestation(
     ctx: i32,
-    user_data: Option<ByteBuf>,
-    nonce: Option<ByteBuf>,
-    public_key: Option<ByteBuf>,
+    user_data: Option<Vec<u8>>,
+    nonce: Option<Vec<u8>>,
+    public_key: Option<Vec<u8>>,
 ) -> Result<(), ErrorCode> {
     let response = nsm_process_request(
         ctx,
@@ -100,7 +99,7 @@ fn check_attestation(ctx: i32, lp: usize) -> Result<(), ErrorCode> {
     );
     now = time::Instant::now();
 
-    check_single_attestation(ctx, Some(ByteBuf::from(&dummy_data[..])), None, None)?;
+    check_single_attestation(ctx, Some(dummy_data[..].to_vec()), None, None)?;
     println!(
         "attestation loop={} w/data took {} ns",
         lp,
@@ -110,8 +109,8 @@ fn check_attestation(ctx: i32, lp: usize) -> Result<(), ErrorCode> {
 
     check_single_attestation(
         ctx,
-        Some(ByteBuf::from(&dummy_data[..])),
-        Some(ByteBuf::from(&dummy_data[..])),
+        Some(dummy_data[..].to_vec()),
+        Some(dummy_data[..].to_vec()),
         None,
     )?;
     println!(
@@ -123,9 +122,9 @@ fn check_attestation(ctx: i32, lp: usize) -> Result<(), ErrorCode> {
 
     check_single_attestation(
         ctx,
-        Some(ByteBuf::from(&dummy_data[..])),
-        Some(ByteBuf::from(&dummy_data[..])),
-        Some(ByteBuf::from(&dummy_data[..])),
+        Some(dummy_data[..].to_vec()),
+        Some(dummy_data[..].to_vec()),
+        Some(dummy_data[..].to_vec()),
     )?;
     println!(
         "attestation loop={} w/user_data, nonce, PK took {} ns",

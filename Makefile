@@ -1,7 +1,7 @@
 # Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 SRC_PATH         = $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-HOST_MACHINE     = $(shell uname -m)
+HOST_MACHINE     = x86_64
 CONTAINER_TAG    = nsm-api
 DOCKERFILES_PATH = ${SRC_PATH}/Dockerfiles
 BUILD_DOCKERFILE = ${DOCKERFILES_PATH}/Dockerfile.build
@@ -14,42 +14,50 @@ NIGHTLY          = nightly
 	docker image build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		--build-arg RUST_VERSION=${COMP_VERSION} \
+		--platform=linux/$(HOST_MACHINE) \
 		-t ${CONTAINER_TAG}-${COMP_VERSION} -f ${BUILD_DOCKERFILE} ${SRC_PATH}
 
 .build-${HOST_MACHINE}-${STABLE}:
 	docker image build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		--build-arg RUST_VERSION=${STABLE} \
+		--platform=linux/$(HOST_MACHINE) \
 		-t ${CONTAINER_TAG}-${STABLE} -f ${BUILD_DOCKERFILE} ${SRC_PATH}
 
 .build-${HOST_MACHINE}-${NIGHTLY}: ${DOCKERFILES_PATH}
 	docker image build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		--build-arg RUST_VERSION=${NIGHTLY} \
+		--platform=linux/$(HOST_MACHINE) \
 		-t ${CONTAINER_TAG}-${NIGHTLY} -f ${BUILD_DOCKERFILE} ${SRC_PATH}
 
 nsm-api-${COMP_VERSION}: .build-${HOST_MACHINE}-${COMP_VERSION}
 	docker run \
+		--platform=linux/$(HOST_MACHINE) \
 		${CONTAINER_TAG}-${COMP_VERSION} \
 		cargo test --all
 
 nsm-api-${STABLE}: .build-${HOST_MACHINE}-${STABLE}
 	docker run \
+		--platform=linux/$(HOST_MACHINE) \
 		${CONTAINER_TAG}-${STABLE} \
 		/bin/bash -c "cargo build && cargo test --all"
 
 nsm-api-${NIGHTLY}: .build-${HOST_MACHINE}-${NIGHTLY}
 	docker run \
+		--platform=linux/$(HOST_MACHINE) \
 		${CONTAINER_TAG}-${NIGHTLY} \
 		cargo test --all
 
 rustfmt: nsm-api-${STABLE}
 	docker run \
+		--platform=linux/$(HOST_MACHINE) \
 		${CONTAINER_TAG}-${STABLE} \
 		cargo fmt -v --all -- --check
 
 clippy: nsm-api-${STABLE}
 	docker run \
+		--platform=linux/$(HOST_MACHINE) \
 		${CONTAINER_TAG}-${STABLE} \
 		cargo clippy --all
 
@@ -65,15 +73,18 @@ command-executer-build:
 .build-nsm-test-cpp-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
+		--platform=linux/$(HOST_MACHINE) \
 		-f ${TEST_DOCKERFILE} -t nsm-test-cpp --target nsm-test-cpp ${SRC_PATH}
 
 .build-nsm-check-docker: command-executer-build
 	docker build \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
+		--platform=linux/$(HOST_MACHINE) \
 		-f ${TEST_DOCKERFILE} -t nsm-check --target nsm-check ${SRC_PATH}
 
 .build-nsm-multithread-docker: command-executer-build
 	docker build \
+		--platform=linux/$(HOST_MACHINE) \
 		--build-arg HOST_MACHINE=${HOST_MACHINE} \
 		-f ${TEST_DOCKERFILE} -t nsm-multithread --target nsm-multithread ${SRC_PATH}
 
