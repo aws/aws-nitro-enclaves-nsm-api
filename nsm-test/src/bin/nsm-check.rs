@@ -81,7 +81,7 @@ fn check_initial_pcrs(ctx: i32, description: &NsmDescription) {
     // First, get the description of all available PCRs.
     let pcr_data: Vec<PcrData> = (0..description.max_pcrs)
         .map(|pcr| {
-            let response = nsm_process_request(ctx, Request::DescribePCR { index: pcr as u16 });
+            let response = nsm_process_request(ctx, Request::DescribePCR { index: pcr });
             match response {
                 Response::DescribePCR { lock, data } => {
                     assert_eq!(

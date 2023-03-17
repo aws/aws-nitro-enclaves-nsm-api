@@ -117,7 +117,7 @@ pub fn nsm_init() -> i32 {
     match open_dev {
         Ok(open_dev) => {
             debug!("Device file '{}' opened successfully.", DEV_FILE);
-            open_dev.into_raw_fd() as i32
+            open_dev.into_raw_fd()
         }
         Err(e) => {
             error!("Device file '{}' failed to open: {}", DEV_FILE, e);
