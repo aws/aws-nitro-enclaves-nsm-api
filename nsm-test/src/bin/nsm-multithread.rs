@@ -140,7 +140,7 @@ fn main() {
     println!("NSM test started.");
 
     let term = Arc::new(atomic::AtomicBool::new(false));
-    signal_hook::flag::register(signal_hook::SIGTERM, Arc::clone(&term))
+    signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&term))
         .expect("Failed to register signal hook");
 
     let ctx = nsm_init();

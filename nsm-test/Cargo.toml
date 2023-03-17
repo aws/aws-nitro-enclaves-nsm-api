@@ -14,5 +14,5 @@ aws-nitro-enclaves-nsm-api = { path = "../" }
 nsm-lib = { path = "../nsm-lib" }
 nix = "0.20"
 threadpool = "1.7"
-signal-hook = "=0.1.8"
+signal-hook = "0.3"
 vsock = "0.3"
