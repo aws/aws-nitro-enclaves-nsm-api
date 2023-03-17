@@ -10,4 +10,5 @@
 //! nsm_driver provides the ioctl interface for the Nitro Secure Module driver.
 
 pub mod api;
+#[cfg(feature = "nix")]
 pub mod driver;

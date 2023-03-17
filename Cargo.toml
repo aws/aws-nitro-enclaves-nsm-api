@@ -18,9 +18,12 @@ default-members = [ "." ]
 lto = true
 
 [dependencies]
-nix = "0.20"
+nix = { version = "0.20", optional = true }
 libc = "0.2"
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_bytes = "0.11"
 serde_cbor = "0.11"
+
+[features]
+default = ["nix"]
