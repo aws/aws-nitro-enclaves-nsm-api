@@ -17,10 +17,10 @@ use libc::ioctl;
 use log::{debug, error};
 use nix::errno::Errno;
 use nix::request_code_readwrite;
-use nix::sys::uio::IoVec;
 use nix::unistd::close;
 
 use std::fs::OpenOptions;
+use std::io::{IoSlice, IoSliceMut};
 use std::mem;
 use std::os::unix::io::{IntoRawFd, RawFd};
 
@@ -33,9 +33,9 @@ const NSM_RESPONSE_MAX_SIZE: usize = 0x3000;
 #[repr(C)]
 struct NsmMessage<'a> {
     /// User-provided data for the request
-    pub request: IoVec<&'a [u8]>,
+    pub request: IoSlice<'a>,
     /// Response data provided by the NSM pipeline
-    pub response: IoVec<&'a mut [u8]>,
+    pub response: IoSliceMut<'a>,
 }
 
 /// Encode an NSM `Request` value into a vector.  
@@ -48,8 +48,8 @@ fn nsm_encode_request_to_cbor(request: Request) -> Vec<u8> {
 /// Decode an NSM `Response` value from a raw memory buffer.  
 /// *Argument 1 (input)*: The `iovec` holding the memory buffer.  
 /// *Returns*: The decoded NSM response.
-fn nsm_decode_response_from_cbor(response_data: &IoVec<&mut [u8]>) -> Response {
-    match serde_cbor::from_slice(response_data.as_slice()) {
+fn nsm_decode_response_from_cbor(response_data: &IoSliceMut<'_>) -> Response {
+    match serde_cbor::from_slice(response_data) {
         Ok(response) => response,
         Err(_) => Response::Error(ErrorCode::InternalError),
     }
@@ -94,8 +94,8 @@ pub fn nsm_process_request(fd: i32, request: Request) -> Response {
 
     let mut cbor_response: [u8; NSM_RESPONSE_MAX_SIZE] = [0; NSM_RESPONSE_MAX_SIZE];
     let mut message = NsmMessage {
-        request: IoVec::from_slice(&cbor_request),
-        response: IoVec::from_mut_slice(&mut cbor_response),
+        request: IoSlice::new(&cbor_request),
+        response: IoSliceMut::new(&mut cbor_response),
     };
     let status = nsm_ioctl(fd, &mut message);
 
