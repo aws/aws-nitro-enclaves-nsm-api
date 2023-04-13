@@ -12,7 +12,7 @@ serde_bytes = "0.11"
 serde_cbor = "0.11"
 aws-nitro-enclaves-nsm-api = { path = "../" }
 nsm-lib = { path = "../nsm-lib" }
-nix = "0.20"
+nix = "0.26"
 threadpool = "1.7"
 signal-hook = "0.3"
 vsock = "0.3"
