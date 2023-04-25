@@ -1,3 +1,22 @@
+# 0.3.0
+
+Changes:
+* Introduce default enabled nix feature flag to allow for non nix usage (#41)
+* Update minimum supported Rust version to v1.60
+
+Fixes:
+* minor clippy fixes
+* update references to IETF documents
+* Fix typos
+* Update Dockerfile.build (#31)
+* Fix and simplify Dockerfiles
+
+Updates:
+* update nix to 0.26 and fix deprecation warnings (#46)
+* update signal-hook requirement from =0.1.8 to =0.3.15
+* update cbindgen requirement from 0.21 to 0.24
+* update vsock requirement from 0.2 to 0.3
+
 # 0.2.1
 
 Fixes:
