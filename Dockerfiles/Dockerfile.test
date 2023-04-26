@@ -1,4 +1,4 @@
-FROM public.ecr.aws/amazonlinux/amazonlinux:latest as builder
+FROM public.ecr.aws/amazonlinux/amazonlinux:2 as builder
 
 ARG HOST_MACHINE=x86_64
 ENV HOST_MACHINE=${HOST_MACHINE}
@@ -41,20 +41,20 @@ RUN cargo install --path nsm-test
 RUN strip /usr/local/cargo/bin/nsm-check
 RUN cd nsm-test/ && make
 
-FROM public.ecr.aws/amazonlinux/amazonlinux:latest as nsm-check
+FROM public.ecr.aws/amazonlinux/amazonlinux:2 as nsm-check
 COPY --from=builder /usr/local/cargo/bin/nsm-check nsm-check
 COPY --from=builder /tmp/workdir/command-executer command-executer
 ENTRYPOINT ["/bin/sh", "-l", "-c"]
 CMD ./command-executer listen --port 5005
 
-FROM public.ecr.aws/amazonlinux/amazonlinux:latest as nsm-test-cpp
+FROM public.ecr.aws/amazonlinux/amazonlinux:2 as nsm-test-cpp
 RUN yum install -y openssl-devel
 COPY --from=builder /tmp/workdir/nsm-test   nsm-test
 COPY --from=builder /tmp/workdir/command-executer command-executer
 ENTRYPOINT ["/bin/sh", "-l", "-c"]
 CMD ./command-executer listen --port 5005
 
-FROM public.ecr.aws/debian/debian:buster-slim as nsm-multithread
+FROM public.ecr.aws/amazonlinux/amazonlinux:2 as nsm-multithread
 COPY --from=builder /usr/local/cargo/bin/nsm-multithread nsm-multithread
 ENTRYPOINT ["/bin/sh", "-l", "-c"]
 CMD ./nsm-multithread
