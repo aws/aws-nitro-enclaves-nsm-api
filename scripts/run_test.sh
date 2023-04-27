@@ -3,7 +3,7 @@
 NUM_TESTS=2
 tests_passed=0
 
-set -eu
+set -u
 if [ $# -eq 1 ]; then
 	if [ "$1" = "CLI_CHECK" ]; then
 		docker system prune --all --force
@@ -11,7 +11,7 @@ if [ $# -eq 1 ]; then
 fi
 
 make run-nsm-test-cpp
-./command-executer/command_executer_docker_dir/command-executer run --cid 16 --port 5005 --command "/nsm-test/test"
+docker run -a stdout -a stderr -t nsm-test-cpp '/command-executer run --cid 16 --port 5005 --command "/nsm-test"'
 
 RESULT=$?
 if [ $RESULT -eq 0 ]; then
@@ -24,7 +24,7 @@ fi
 nitro-cli terminate-enclave --all
 
 make run-nsm-check-eif
-./command-executer/command_executer_docker_dir/command-executer run --cid 16 --port 5005 --command "/nsm-check"
+docker run -a stdout -a stderr nsm-check '/command-executer run --cid 16 --port 5005 --command "/nsm-check"'
 
 RESULT=$?
 if [ $RESULT -eq 0 ]; then
