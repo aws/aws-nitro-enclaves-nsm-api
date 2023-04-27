@@ -1,60 +1,38 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:2 as builder
 
-ARG HOST_MACHINE=x86_64
-ENV HOST_MACHINE=${HOST_MACHINE}
 ENV RUSTUP_HOME=/usr/local/rustup
 ENV CARGO_HOME=/usr/local/cargo
 ENV PATH=/usr/local/cargo/bin:$PATH
 
-RUN yum install -y \
-	wget \
-	gcc \
-	gcc-c++ \
-	ca-certificates \	
-	glibc-devel \
-	openssl-devel \
-	make; \
-	url="https://static.rust-lang.org/rustup/dist/${HOST_MACHINE}-unknown-linux-gnu/rustup-init"; \
-    	wget "$url"; \
-    	chmod +x rustup-init; \
-    	./rustup-init -y --no-modify-path --default-toolchain stable; \
-    	chmod -R a+w $RUSTUP_HOME $CARGO_HOME; \
-    	rustup --version; \
-    	cargo --version; \
-    	rustc --version; 
-
-RUN yum remove -y \
-        wget ;
-	
-RUN rustup target install ${HOST_MACHINE}-unknown-linux-musl
+RUN yum install -y git gcc gcc-c++ ca-certificates glibc-devel openssl-devel make
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain stable && \
+	rustup target install $(uname -m)-unknown-linux-musl
 
 WORKDIR /tmp/workdir
-COPY ./nsm-lib nsm-lib
-COPY ./nsm-io nsm-io
-COPY ./nsm-driver nsm-driver
-COPY ./nsm-test nsm-test
-COPY ./Cargo.toml Cargo.toml
-## command-executer binary is required from aws-nitro-enclaves-cli repository
-COPY ./command-executer/command_executer_docker_dir/command-executer command-executer
-RUN cargo build
+COPY . .
 RUN cargo install --path nsm-test
-RUN strip /usr/local/cargo/bin/nsm-check
-RUN cd nsm-test/ && make
+RUN cargo build --package nsm-lib
+RUN make -C nsm-test
+
+RUN git clone -b v1.2.2 https://github.com/aws/aws-nitro-enclaves-cli.git && \
+	cargo install --path aws-nitro-enclaves-cli/samples/command_executer
 
 FROM public.ecr.aws/amazonlinux/amazonlinux:2 as nsm-check
 COPY --from=builder /usr/local/cargo/bin/nsm-check nsm-check
-COPY --from=builder /tmp/workdir/command-executer command-executer
+COPY --from=builder /usr/local/cargo/bin/command-executer command-executer
 ENTRYPOINT ["/bin/sh", "-l", "-c"]
 CMD ./command-executer listen --port 5005
 
 FROM public.ecr.aws/amazonlinux/amazonlinux:2 as nsm-test-cpp
 RUN yum install -y openssl-devel
-COPY --from=builder /tmp/workdir/nsm-test   nsm-test
-COPY --from=builder /tmp/workdir/command-executer command-executer
+COPY --from=builder /tmp/workdir/nsm-test/test   nsm-test
+COPY --from=builder /usr/local/cargo/bin/command-executer command-executer
+COPY --from=builder /tmp/workdir/target/debug/libnsm.so   /usr/lib64/libnsm.so
 ENTRYPOINT ["/bin/sh", "-l", "-c"]
 CMD ./command-executer listen --port 5005
 
 FROM public.ecr.aws/amazonlinux/amazonlinux:2 as nsm-multithread
 COPY --from=builder /usr/local/cargo/bin/nsm-multithread nsm-multithread
+COPY --from=builder /usr/local/cargo/bin/command-executer command-executer
 ENTRYPOINT ["/bin/sh", "-l", "-c"]
-CMD ./nsm-multithread
+CMD timeout --preserve-status 1m /nsm-multithread

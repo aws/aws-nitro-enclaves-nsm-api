@@ -1,38 +1,15 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:2
-ARG HOST_MACHINE=x86_64
-ENV HOST_MACHINE=${HOST_MACHINE}
 ARG RUST_VERSION=stable
 ENV RUST_VERSION=${RUST_VERSION}
 
-# Update default packages
-RUN yum update -y
 
 ENV RUSTUP_HOME=/usr/local/rustup \
     CARGO_HOME=/usr/local/cargo \
     PATH=/usr/local/cargo/bin:$PATH
 
-RUN set -eux; \
-    yum update -y; \
-    yum install -y \
-        ca-certificates \
-        gcc \
-        libc6-dev \
-        wget \
-        ; \
-    \
-    url="https://static.rust-lang.org/rustup/dist/${HOST_MACHINE}-unknown-linux-gnu/rustup-init"; \
-    wget "$url"; \
-    chmod +x rustup-init; \
-    ./rustup-init -y --no-modify-path --default-toolchain ${RUST_VERSION}; \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME; \
-    rustup --version; \
-    cargo --version; \
-    rustc --version; \
-    \
-    yum remove -y \
-        wget \
-        ; \
-    rm -rf /var/lib/apt/lists/*;
+RUN yum install -y ca-certificates gcc libc6-dev && \
+	curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --default-toolchain ${RUST_VERSION} && \
+	rm -rf /var/lib/apt/lists/*
 
 ADD . /build
 WORKDIR /build 
