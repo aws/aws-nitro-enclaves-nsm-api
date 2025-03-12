@@ -9,8 +9,8 @@
 //! In general, a message contains:
 //! 1. A *request* content structure, holding CBOR-encoded user input data.
 //! 2. A *response* content structure, with an initial memory capacity provided by
-//! the user, which then gets populated with information from the NSM driver and
-//! then decoded from CBOR.
+//!    the user, which then gets populated with information from the NSM driver and
+//!    then decoded from CBOR.
 
 use crate::api::{ErrorCode, Request, Response};
 use libc::ioctl;
