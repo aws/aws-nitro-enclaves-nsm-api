@@ -245,11 +245,11 @@ impl AttestationDoc {
     ///
     /// * module_id: a String representing the name of the NitroSecureModule
     /// * digest: nsm_io::Digest that describes what the PlatformConfigurationRegisters
-    ///           contain
+    ///   contain
     /// * pcrs: BTreeMap containing the index to PCR value
     /// * certificate: the serialized certificate that will be used to sign this AttestationDoc
     /// * cabundle: the serialized set of certificates up to the root of trust certificate that
-    ///             emitted `certificate`
+    ///   emitted `certificate`
     /// * user_data: optional user definted data included in the AttestationDoc
     /// * nonce: optional cryptographic nonce that will be included in the AttestationDoc
     /// * public_key: optional DER-encoded public key that will be included in the AttestationDoc
