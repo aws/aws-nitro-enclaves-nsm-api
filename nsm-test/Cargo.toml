@@ -9,7 +9,6 @@ config_emulated = []
 
 [dependencies]
 serde_bytes = "0.11"
-serde_cbor = "0.11"
 aws-nitro-enclaves-nsm-api = { path = "../" }
 nsm-lib = { path = "../nsm-lib" }
 nix = "0.26"
