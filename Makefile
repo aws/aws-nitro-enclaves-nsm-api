@@ -10,6 +10,8 @@ COMP_VERSION     = 1.63.0
 STABLE           = stable
 NIGHTLY          = nightly
 
+.PHONY: nsm-lib clean
+
 .build-${HOST_MACHINE}-${COMP_VERSION}: ${DOCKERFILES_PATH}
 	docker image build \
 		--build-arg RUST_VERSION=${COMP_VERSION} \
@@ -82,5 +84,9 @@ run-nsm-check-eif: .build-nsm-check-eif
 
 run-nsm-multithread-eif: .build-nsm-multithread-eif
 	nitro-cli run-enclave --cpu-count 4 --memory 2048 --eif-path eifs/${HOST_MACHINE}/nsm-multithread.eif --enclave-cid 16 --attach-console
+
+nsm-lib:
+	cargo build --package $@ --release
+
 clean:
 	cargo clean
