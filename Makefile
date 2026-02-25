@@ -9,8 +9,17 @@ TEST_DOCKERFILE  = ${DOCKERFILES_PATH}/Dockerfile.test
 COMP_VERSION     = 1.63.0
 STABLE           = stable
 NIGHTLY          = nightly
+VERSION = 0.4.0
+RELEASE_DIR	= target/release
 
-.PHONY: nsm-lib clean
+ifeq ($(PREFIX),)
+	PREFIX := /usr/local
+endif
+
+LIBDIR ?= $(PREFIX)/lib
+INCLUDEDIR ?= $(PREFIX)/include
+
+.PHONY: libnsm.pc nsm-lib install clean
 
 .build-${HOST_MACHINE}-${COMP_VERSION}: ${DOCKERFILES_PATH}
 	docker image build \
@@ -87,6 +96,25 @@ run-nsm-multithread-eif: .build-nsm-multithread-eif
 
 nsm-lib:
 	cargo build --package $@ --release
+
+libnsm.pc: libnsm.pc.in
+	rm -f $@ $@-t
+	sed -e 's|@prefix@|$(PREFIX)|' \
+	    -e 's|@libdir@|$(LIBDIR)|' \
+	    -e 's|@includedir@|$(INCLUDEDIR)|' \
+	    -e 's|@PACKAGE_NAME@|libnsm|' \
+	    -e 's|@PACKAGE_VERSION@|$(VERSION)|' \
+	    libnsm.pc.in > $@-t
+	mv $@-t $@
+
+install: nsm-lib libnsm.pc
+	install -d $(DESTDIR)$(LIBDIR)
+	install -d $(DESTDIR)$(LIBDIR)/pkgconfig
+	install -d $(DESTDIR)$(INCLUDEDIR)
+	install -m 644 $(RELEASE_DIR)/nsm.h $(DESTDIR)$(INCLUDEDIR)
+	install -m 644 libnsm.pc $(DESTDIR)$(LIBDIR)/pkgconfig
+	install -m 755 $(RELEASE_DIR)/libnsm.so $(DESTDIR)$(LIBDIR)
+	install -m 644 $(RELEASE_DIR)/libnsm.a $(DESTDIR)$(LIBDIR)
 
 clean:
 	cargo clean
