@@ -15,4 +15,4 @@ nsm-lib = { path = "../nsm-lib" }
 nix = "0.26"
 threadpool = "1.7"
 signal-hook = "0.3"
-vsock = "0.3"
+vsock = "0.5"
