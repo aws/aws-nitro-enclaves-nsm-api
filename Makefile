@@ -6,10 +6,10 @@ CONTAINER_TAG    = nsm-api
 DOCKERFILES_PATH = ${SRC_PATH}/Dockerfiles
 BUILD_DOCKERFILE = ${DOCKERFILES_PATH}/Dockerfile.build
 TEST_DOCKERFILE  = ${DOCKERFILES_PATH}/Dockerfile.test
-COMP_VERSION     = 1.63.0
+COMP_VERSION     = $(shell grep "rust-version" Cargo.toml | head -n 1 | cut -d' ' -f3 | tr -d '"')
 STABLE           = stable
 NIGHTLY          = nightly
-VERSION = 0.4.0
+VERSION = $(shell grep "version" Cargo.toml | head -n 1 | cut -d' ' -f3 | tr -d '"')
 RELEASE_DIR	= target/release
 
 ifeq ($(PREFIX),)
