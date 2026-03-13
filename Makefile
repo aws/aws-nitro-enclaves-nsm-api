@@ -11,6 +11,7 @@ STABLE           = stable
 NIGHTLY          = nightly
 VERSION = $(shell grep "version" Cargo.toml | head -n 1 | cut -d' ' -f3 | tr -d '"')
 RELEASE_DIR	= target/release
+RUSTC_STATIC_LIBS = $(shell cargo rustc -q -- --print=native-static-libs)
 
 ifeq ($(PREFIX),)
 	PREFIX := /usr/local
@@ -104,6 +105,7 @@ libnsm.pc: libnsm.pc.in
 	    -e 's|@includedir@|$(INCLUDEDIR)|' \
 	    -e 's|@PACKAGE_NAME@|libnsm|' \
 	    -e 's|@PACKAGE_VERSION@|$(VERSION)|' \
+	    -e 's|@LIBS_PRIVATE@|$(RUSTC_STATIC_LIBS)|' \
 	    libnsm.pc.in > $@-t
 	mv $@-t $@
 
