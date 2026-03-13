@@ -22,4 +22,4 @@ Description: C Library for Nitro Secure Module (NSM).
 Requires:
 Cflags: -I${includedir}
 Libs: -L${libdir} -lnsm
-Libs.private:
+Libs.private:@LIBS_PRIVATE@
