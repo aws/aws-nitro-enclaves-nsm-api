@@ -1,3 +1,13 @@
+# 0.5.0
+Changes:
+* Bump version to 1.92
+* Specify "dep" prefix for nix dependency
+* Add Makefile library, pkg-config, and install targets
+* Update vsock dependency to version 0.5
+
+Fixes:
+* Fix clippy warnings
+
 # 0.4.0
 
 Changes:
