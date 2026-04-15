@@ -13,6 +13,11 @@ VERSION = $(shell grep "version" Cargo.toml | head -n 1 | cut -d' ' -f3 | tr -d 
 RELEASE_DIR	= target/release
 RUSTC_STATIC_LIBS = $(shell cargo rustc -q -- --print=native-static-libs)
 
+LIBNSM_ABI_VERSION = 0
+LIBNSM_SONAME = libnsm.so
+LIBNSM_SONAME_ABI_VERSION = $(LIBNSM_SONAME).$(LIBNSM_ABI_VERSION)
+LIBNSM_SONAME_VERSION = $(LIBNSM_SONAME).$(VERSION)
+
 ifeq ($(PREFIX),)
 	PREFIX := /usr/local
 endif
@@ -115,8 +120,9 @@ install: nsm-lib libnsm.pc
 	install -d $(DESTDIR)$(INCLUDEDIR)
 	install -m 644 $(RELEASE_DIR)/nsm.h $(DESTDIR)$(INCLUDEDIR)
 	install -m 644 libnsm.pc $(DESTDIR)$(LIBDIR)/pkgconfig
-	install -m 755 $(RELEASE_DIR)/libnsm.so $(DESTDIR)$(LIBDIR)
+	patchelf --set-soname $(LIBNSM_SONAME_ABI_VERSION) $(RELEASE_DIR)/$(LIBNSM_SONAME)
+	install -m 755 $(RELEASE_DIR)/$(LIBNSM_SONAME) $(DESTDIR)$(LIBDIR)/$(LIBNSM_SONAME_VERSION)
 	install -m 644 $(RELEASE_DIR)/libnsm.a $(DESTDIR)$(LIBDIR)
-
+	cd $(DESTDIR)$(LIBDIR)/ ; ln -sf $(LIBNSM_SONAME_VERSION) $(LIBNSM_SONAME_ABI_VERSION) ; ln -sf $(LIBNSM_SONAME_ABI_VERSION) $(LIBNSM_SONAME)
 clean:
 	cargo clean
