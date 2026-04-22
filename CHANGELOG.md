@@ -1,3 +1,7 @@
+# 0.5.1
+* Bump nix dependency to 0.31
+* Add ABI compatibility version naming to libnsm soname install process
+
 # 0.5.0
 Changes:
 * Bump version to 1.92
