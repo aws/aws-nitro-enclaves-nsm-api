@@ -1,6 +1,6 @@
 [package]
 name = "aws-nitro-enclaves-nsm-api"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["The AWS Nitro Enclaves Team <aws-nitro-enclaves-devel@amazon.com>"]
 edition = "2018"
 rust-version = "1.92"
