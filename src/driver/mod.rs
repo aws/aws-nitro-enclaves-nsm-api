@@ -109,19 +109,19 @@ pub fn nsm_process_request(fd: i32, request: Request) -> Response {
 }
 
 /// NSM library initialization function.  
-/// *Returns*: A descriptor for the opened device file.
-pub fn nsm_init() -> i32 {
+/// *Returns*: A descriptor for the opened device file, if successful.
+pub fn nsm_init() -> Option<i32> {
     let mut open_options = OpenOptions::new();
     let open_dev = open_options.read(true).write(true).open(DEV_FILE);
 
     match open_dev {
         Ok(open_dev) => {
             debug!("Device file '{}' opened successfully.", DEV_FILE);
-            open_dev.into_raw_fd()
+            Some(open_dev.into_raw_fd())
         }
         Err(e) => {
             error!("Device file '{}' failed to open: {}", DEV_FILE, e);
-            -1
+            None
         }
     }
 }
