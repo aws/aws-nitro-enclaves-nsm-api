@@ -120,7 +120,6 @@ install: nsm-lib libnsm.pc
 	install -d $(DESTDIR)$(INCLUDEDIR)
 	install -m 644 $(RELEASE_DIR)/nsm.h $(DESTDIR)$(INCLUDEDIR)
 	install -m 644 libnsm.pc $(DESTDIR)$(LIBDIR)/pkgconfig
-	patchelf --set-soname $(LIBNSM_SONAME_ABI_VERSION) $(RELEASE_DIR)/$(LIBNSM_SONAME)
 	install -m 755 $(RELEASE_DIR)/$(LIBNSM_SONAME) $(DESTDIR)$(LIBDIR)/$(LIBNSM_SONAME_VERSION)
 	install -m 644 $(RELEASE_DIR)/libnsm.a $(DESTDIR)$(LIBDIR)
 	cd $(DESTDIR)$(LIBDIR)/ ; ln -sf $(LIBNSM_SONAME_VERSION) $(LIBNSM_SONAME_ABI_VERSION) ; ln -sf $(LIBNSM_SONAME_ABI_VERSION) $(LIBNSM_SONAME)
