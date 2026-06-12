@@ -18,6 +18,9 @@ fn main() {
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(out_path.join("nsm.h"));
+    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {
+        println!("cargo:rustc-cdylib-link-arg=-Wl,-soname,libnsm.so.0");
+    }
 }
 
 /// Sets target to target/$PROFILE/
