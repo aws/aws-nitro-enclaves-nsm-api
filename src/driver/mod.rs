@@ -20,7 +20,7 @@ use nix::request_code_readwrite;
 use nix::unistd::close;
 
 use std::fs::OpenOptions;
-use std::io::{IoSlice, IoSliceMut};
+use std::io::IoSlice;
 use std::mem;
 use std::os::unix::io::{IntoRawFd, RawFd};
 
@@ -35,29 +35,29 @@ struct NsmMessage<'a> {
     /// User-provided data for the request
     pub request: IoSlice<'a>,
     /// Response data provided by the NSM pipeline
-    pub response: IoSliceMut<'a>,
+    pub response: IoSlice<'a>,
 }
 
-/// Encode an NSM `Request` value into a vector.  
-/// *Argument 1 (input)*: The NSM request.  
-/// *Returns*: The vector containing the CBOR encoding.
-fn nsm_encode_request_to_cbor(request: Request) -> Vec<u8> {
-    serde_cbor::to_vec(&request).unwrap()
+/// Encode an NSM `Request` value into a vector.
+/// *Argument 1 (input)*: The NSM request.
+/// *Argument 2 (input)*: The buffer that will have the CBOR written into it.
+fn nsm_encode_request_to_cbor(request: Request, buf: &mut Vec<u8>) {
+    ciborium::into_writer(&request, buf).expect("buf's Writer returned an unexpected error");
 }
 
-/// Decode an NSM `Response` value from a raw memory buffer.  
-/// *Argument 1 (input)*: The `iovec` holding the memory buffer.  
+/// Decode an NSM `Response` value from a raw memory buffer.
+/// *Argument 1 (input)*: The `iovec` holding the memory buffer.
 /// *Returns*: The decoded NSM response.
-fn nsm_decode_response_from_cbor(response_data: &IoSliceMut<'_>) -> Response {
-    match serde_cbor::from_slice(response_data) {
+fn nsm_decode_response_from_cbor(response_data: &IoSlice<'_>) -> Response {
+    match ciborium::from_reader(response_data.as_ref()) {
         Ok(response) => response,
         Err(_) => Response::Error(ErrorCode::InternalError),
     }
 }
 
-/// Do an `ioctl()` of a given type for a given message.  
-/// *Argument 1 (input)*: The descriptor to the device file.  
-/// *Argument 2 (input/output)*: The message to be sent and updated via `ioctl()`.  
+/// Do an `ioctl()` of a given type for a given message.
+/// *Argument 1 (input)*: The descriptor to the device file.
+/// *Argument 2 (input/output)*: The message to be sent and updated via `ioctl()`.
 /// *Returns*: The status of the operation.
 fn nsm_ioctl(fd: i32, message: &mut NsmMessage) -> Option<Errno> {
     let status = unsafe {
@@ -80,22 +80,23 @@ fn nsm_ioctl(fd: i32, message: &mut NsmMessage) -> Option<Errno> {
 
 /// Create a message with input data and output capacity from a given
 /// request, then send it to the NSM driver via `ioctl()` and wait
-/// for the driver's response.  
-/// *Argument 1 (input)*: The descriptor to the NSM device file.  
-/// *Argument 2 (input)*: The NSM request.  
+/// for the driver's response.
+/// *Argument 1 (input)*: The descriptor to the NSM device file.
+/// *Argument 2 (input)*: The NSM request.
 /// *Returns*: The corresponding NSM response from the driver.
 pub fn nsm_process_request(fd: i32, request: Request) -> Response {
-    let cbor_request = nsm_encode_request_to_cbor(request);
+    let mut cbor_request = Vec::with_capacity(NSM_REQUEST_MAX_SIZE);
+    nsm_encode_request_to_cbor(request, &mut cbor_request);
 
     // Check if the request is too large
     if cbor_request.len() > NSM_REQUEST_MAX_SIZE {
         return Response::Error(ErrorCode::InputTooLarge);
     }
 
-    let mut cbor_response: [u8; NSM_RESPONSE_MAX_SIZE] = [0; NSM_RESPONSE_MAX_SIZE];
+    let cbor_response: [u8; NSM_RESPONSE_MAX_SIZE] = [0; NSM_RESPONSE_MAX_SIZE];
     let mut message = NsmMessage {
         request: IoSlice::new(&cbor_request),
-        response: IoSliceMut::new(&mut cbor_response),
+        response: IoSlice::new(&cbor_response),
     };
     let status = nsm_ioctl(fd, &mut message);
 
@@ -108,7 +109,7 @@ pub fn nsm_process_request(fd: i32, request: Request) -> Response {
     }
 }
 
-/// NSM library initialization function.  
+/// NSM library initialization function.
 /// *Returns*: A descriptor for the opened device file.
 pub fn nsm_init() -> i32 {
     let mut open_options = OpenOptions::new();
@@ -126,7 +127,7 @@ pub fn nsm_init() -> i32 {
     }
 }
 
-/// NSM library exit function.  
+/// NSM library exit function.
 /// *Argument 1 (input)*: The descriptor for the opened device file, as
 /// obtained from `nsm_init()`.
 pub fn nsm_exit(fd: i32) {
@@ -134,5 +135,23 @@ pub fn nsm_exit(fd: i32) {
     match result {
         Ok(()) => debug!("File of descriptor {} closed successfully.", fd),
         Err(e) => error!("File of descriptor {} failed to close: {}", fd, e),
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{Request, NSM_REQUEST_MAX_SIZE};
+    #[test]
+    fn test_nsm_encode_request_to_cbor_exceed_max_size_without_panic() {
+        let request = Request::ExtendPCR {
+            index: 0,
+            data: vec![0u8; NSM_REQUEST_MAX_SIZE],
+        };
+
+        let mut buf = Vec::with_capacity(NSM_REQUEST_MAX_SIZE);
+        super::nsm_encode_request_to_cbor(request, &mut buf);
+
+        // Ensure the buffer increased its capacity without panicking
+        assert!(buf.len() > NSM_REQUEST_MAX_SIZE);
     }
 }
