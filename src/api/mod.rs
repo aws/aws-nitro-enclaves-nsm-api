@@ -16,15 +16,16 @@ use std::result;
 
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
-use serde_cbor::error::Error as CborError;
-use serde_cbor::{from_slice, to_vec};
+
+pub mod cbor;
+use cbor::{from_slice, to_vec, Error as CborError};
 
 #[derive(Debug)]
 /// Possible error types return from this library.
 pub enum Error {
     /// An IO error of type `std::io::Error`
     Io(IoError),
-    /// A CBOR ser/de error of type `serde_cbor::error::Error`.
+    /// A CBOR encoding or decoding error.
     Cbor(CborError),
 }
 
@@ -327,5 +328,120 @@ mod tests {
         let bin2 = doc2.to_binary();
         assert_eq!(doc1, doc2);
         assert_eq!(bin1, bin2);
+    }
+
+    fn unhex(s: &str) -> Vec<u8> {
+        hex::decode(s).unwrap()
+    }
+
+    // Expected bytes were produced by serde_cbor 0.11.2 on the 0.5.2 tree.
+    // They pin the wire format across the ciborium migration.
+
+    #[test]
+    fn request_encoding_matches_serde_cbor() {
+        let cases: Vec<(Request, &str)> = vec![
+            (Request::DescribePCR { index: 3 }, "a16b4465736372696265504352a165696e64657803"),
+            (
+                Request::ExtendPCR {
+                    index: 4,
+                    data: vec![1, 2, 3],
+                },
+                "a169457874656e64504352a265696e64657804646461746143010203",
+            ),
+            (Request::LockPCR { index: 5 }, "a1674c6f636b504352a165696e64657805"),
+            (Request::LockPCRs { range: 16 }, "a1684c6f636b50435273a16572616e676510"),
+            (Request::DescribeNSM, "6b44657363726962654e534d"),
+            (
+                Request::Attestation {
+                    user_data: Some(ByteBuf::from(vec![9, 9])),
+                    nonce: None,
+                    public_key: Some(ByteBuf::from(vec![7])),
+                },
+                "a16b4174746573746174696f6ea369757365725f64617461420909656e6f6e6365f66a7075626c69635f6b65794107",
+            ),
+            (Request::GetRandom, "6947657452616e646f6d"),
+        ];
+        for (req, expected) in cases {
+            let bytes = to_vec(&req).unwrap();
+            assert_eq!(bytes, unhex(expected), "{req:?}");
+            let back: Request = from_slice(&bytes).unwrap();
+            assert_eq!(to_vec(&back).unwrap(), bytes, "{req:?} round trip");
+        }
+    }
+
+    #[test]
+    fn response_encoding_matches_serde_cbor() {
+        let cases: Vec<(Response, &str)> = vec![
+            (
+                Response::DescribePCR {
+                    lock: true,
+                    data: vec![0xaa, 0xbb],
+                },
+                "a16b4465736372696265504352a2646c6f636bf5646461746142aabb",
+            ),
+            (Response::ExtendPCR { data: vec![1] }, "a169457874656e64504352a164646174614101"),
+            (Response::LockPCR, "674c6f636b504352"),
+            (Response::LockPCRs, "684c6f636b50435273"),
+            (
+                Response::DescribeNSM {
+                    version_major: 1,
+                    version_minor: 2,
+                    version_patch: 3,
+                    module_id: "i-abc".into(),
+                    max_pcrs: 32,
+                    locked_pcrs: vec![0u16, 1].into_iter().collect(),
+                    digest: Digest::SHA384,
+                },
+                "a16b44657363726962654e534da76d76657273696f6e5f6d616a6f72016d76657273696f6e5f6d696e6f72026d76657273696f6e5f706174636803696d6f64756c655f696465692d616263686d61785f7063727318206b6c6f636b65645f706372738200016664696765737466534841333834",
+            ),
+            (
+                Response::Attestation {
+                    document: vec![0xd2, 0x84],
+                },
+                "a16b4174746573746174696f6ea168646f63756d656e7442d284",
+            ),
+            (
+                Response::GetRandom {
+                    random: vec![4, 4, 4],
+                },
+                "a16947657452616e646f6da16672616e646f6d43040404",
+            ),
+            (
+                Response::Error(ErrorCode::InvalidIndex),
+                "a1654572726f726c496e76616c6964496e646578",
+            ),
+        ];
+        for (resp, expected) in cases {
+            let bytes = to_vec(&resp).unwrap();
+            assert_eq!(bytes, unhex(expected), "{resp:?}");
+            let back: Response = from_slice(&bytes).unwrap();
+            assert_eq!(to_vec(&back).unwrap(), bytes, "{resp:?} round trip");
+        }
+    }
+
+    #[test]
+    fn attestation_doc_encoding_matches_serde_cbor() {
+        let mut pcrs = BTreeMap::new();
+        pcrs.insert(1, vec![1, 2, 3]);
+        pcrs.insert(2, vec![4, 5, 6]);
+        let doc = AttestationDoc::new(
+            "abcd".to_string(),
+            Digest::SHA256,
+            1234,
+            pcrs,
+            vec![42; 10],
+            vec![],
+            Some(vec![255; 10]),
+            None,
+            None,
+        );
+        assert_eq!(doc.to_binary(), unhex("a9696d6f64756c655f6964646162636466646967657374665348413235366974696d657374616d701904d26470637273a2014301020302430405066b63657274696669636174654a2a2a2a2a2a2a2a2a2a2a68636162756e646c65806a7075626c69635f6b6579f669757365725f646174614affffffffffffffffffff656e6f6e6365f6"));
+    }
+
+    #[test]
+    fn from_binary_rejects_trailing_bytes() {
+        let mut bytes = to_vec(&Request::DescribeNSM).unwrap();
+        bytes.push(0x00);
+        assert!(from_slice::<Request>(&bytes).is_err());
     }
 }
