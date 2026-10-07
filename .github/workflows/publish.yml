@@ -1,0 +1,21 @@
+name: Publish to crates.io
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      # Required for the OIDC token exchange with crates.io.
+      id-token: write
+    steps:
+    - uses: actions/checkout@v4
+    - uses: rust-lang/crates-io-auth-action@v1
+      id: auth
+    # Only the library is published; nsm-lib and nsm-test stay in the repo.
+    - run: cargo publish -p aws-nitro-enclaves-nsm-api
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
