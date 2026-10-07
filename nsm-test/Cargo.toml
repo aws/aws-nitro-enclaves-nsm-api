@@ -1,6 +1,6 @@
 [package]
 name = "nsm-test"
-version = "0.5.2"
+version = "0.6.0"
 authors = ["The AWS Nitro Enclaves Team <aws-nitro-enclaves-devel@amazon.com>"]
 edition = "2018"
 
@@ -9,7 +9,6 @@ config_emulated = []
 
 [dependencies]
 serde_bytes = "0.11"
-serde_cbor = "0.11"
 aws-nitro-enclaves-nsm-api = { path = "../" }
 nsm-lib = { path = "../nsm-lib" }
 nix = "0.31"

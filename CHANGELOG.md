@@ -1,3 +1,10 @@
+# 0.6.0
+Changes:
+* Replace serde_cbor (unmaintained, RUSTSEC-2021-0127) with ciborium.
+* `api::Error::Cbor` now carries `api::cbor::Error` instead of `serde_cbor::error::Error`.
+* Add `api::cbor::{to_vec, from_slice}`.
+* Decoding accepts CBOR tags before an item and rejects an integer enum variant index. serde_cbor produced neither.
+
 # 0.5.2
 * Set soname while building nsm-lib
 
