@@ -1,6 +1,7 @@
 [package]
 name = "nsm-lib"
 version = "0.5.2"
+publish = false
 authors = ["The AWS Nitro Enclaves Team <aws-nitro-enclaves-devel@amazon.com>"]
 edition = "2018"
 license = "Apache-2.0"
