@@ -42,3 +42,14 @@ jobs:
         - uses: dtolnay/rust-toolchain@nightly
         - run: rustup component add rustfmt
         - run: cargo fmt --all -- --check
+
+    install:
+        name: Install
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+        - uses: dtolnay/rust-toolchain@nightly
+        - run: sudo apt install pkg-config cargo sed -y
+        - run: sudo mkdir -p /usr/local/lib/pkgconfig
+        - run: sudo make install
+        - run: pkg-config --validate libnsm
