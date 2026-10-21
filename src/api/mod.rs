@@ -16,16 +16,14 @@ use std::result;
 
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
-use serde_cbor::error::Error as CborError;
-use serde_cbor::{from_slice, to_vec};
 
 #[derive(Debug)]
 /// Possible error types return from this library.
 pub enum Error {
     /// An IO error of type `std::io::Error`
     Io(IoError),
-    /// A CBOR ser/de error of type `serde_cbor::error::Error`.
-    Cbor(CborError),
+    /// A CBOR de error of type `ciborium::de::Error<std::io::Error>`.
+    Cbor(ciborium::de::Error<std::io::Error>),
 }
 
 /// Result type return nsm-io::Error on failure.
@@ -34,12 +32,6 @@ pub type Result<T> = result::Result<T, Error>;
 impl From<IoError> for Error {
     fn from(error: IoError) -> Self {
         Error::Io(error)
-    }
-}
-
-impl From<CborError> for Error {
-    fn from(error: CborError) -> Self {
-        Error::Cbor(error)
     }
 }
 
@@ -290,13 +282,15 @@ impl AttestationDoc {
     /// Helper function that converts an AttestationDoc structure to its CBOR representation
     pub fn to_binary(&self) -> Vec<u8> {
         // This should not fail
-        to_vec(self).unwrap()
+        let mut buf = Vec::with_capacity(1024);
+        ciborium::into_writer(self, &mut buf).unwrap();
+        buf
     }
 
     /// Helper function that parses a CBOR representation of an AttestationDoc and creates the
     /// structure from it, if possible.
     pub fn from_binary(bin: &[u8]) -> Result<Self> {
-        from_slice(bin).map_err(Error::Cbor)
+        ciborium::from_reader(bin).map_err(Error::Cbor)
     }
 }
 
