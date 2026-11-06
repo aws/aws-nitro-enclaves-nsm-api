@@ -42,14 +42,14 @@ struct NsmMessage<'a> {
 /// *Argument 1 (input)*: The NSM request.  
 /// *Returns*: The vector containing the CBOR encoding.
 fn nsm_encode_request_to_cbor(request: Request) -> Vec<u8> {
-    serde_cbor::to_vec(&request).unwrap()
+    crate::api::cbor::to_vec(&request).unwrap()
 }
 
 /// Decode an NSM `Response` value from a raw memory buffer.  
 /// *Argument 1 (input)*: The `iovec` holding the memory buffer.  
 /// *Returns*: The decoded NSM response.
 fn nsm_decode_response_from_cbor(response_data: &IoSliceMut<'_>) -> Response {
-    match serde_cbor::from_slice(response_data) {
+    match crate::api::cbor::from_slice(response_data) {
         Ok(response) => response,
         Err(_) => Response::Error(ErrorCode::InternalError),
     }
